@@ -1,4 +1,3 @@
-use beef::Cow;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -15,8 +14,6 @@ use crate::{
     units::data_units::DataUnit,
     utils::error::{self, BottomError},
 };
-
-use typed_builder::*;
 
 use layout_options::*;
 
@@ -35,138 +32,77 @@ pub struct Config {
     pub net_filter: Option<IgnoreList>,
 }
 
-impl Config {
-    pub fn get_config_as_bytes(&self) -> anyhow::Result<Vec<u8>> {
-        let mut config_string: Vec<Cow<'_, str>> = Vec::default();
-
-        // Top level
-        config_string.push(CONFIG_TOP_HEAD.into());
-        config_string.push(toml::to_string_pretty(self)?.into());
-
-        Ok(config_string.concat().as_bytes().to_vec())
-    }
-}
-
-#[derive(Clone, Debug, Default, Deserialize, Serialize, TypedBuilder)]
+#[derive(Clone, Debug, Default, Deserialize, Serialize)]
 pub struct ConfigFlags {
-    #[builder(default, setter(strip_option))]
     pub hide_avg_cpu: Option<bool>,
 
-    #[builder(default, setter(strip_option))]
     pub dot_marker: Option<bool>,
 
-    #[builder(default, setter(strip_option))]
     pub temperature_type: Option<String>,
 
-    #[builder(default, setter(strip_option))]
     pub rate: Option<u64>,
 
-    #[builder(default, setter(strip_option))]
     pub left_legend: Option<bool>,
 
-    #[builder(default, setter(strip_option))]
     pub current_usage: Option<bool>,
 
-    #[builder(default, setter(strip_option))]
     pub group_processes: Option<bool>,
 
-    #[builder(default, setter(strip_option))]
     pub case_sensitive: Option<bool>,
 
-    #[builder(default, setter(strip_option))]
     pub whole_word: Option<bool>,
 
-    #[builder(default, setter(strip_option))]
     pub regex: Option<bool>,
 
-    #[builder(default, setter(strip_option))]
     pub default_widget: Option<String>,
 
-    #[builder(default, setter(strip_option))]
     pub basic: Option<bool>,
 
-    #[builder(default, setter(strip_option))]
     pub default_time_value: Option<u64>,
 
-    #[builder(default, setter(strip_option))]
     pub time_delta: Option<u64>,
 
-    #[builder(default, setter(strip_option))]
     pub autohide_time: Option<bool>,
 
-    #[builder(default, setter(strip_option))]
     pub hide_time: Option<bool>,
 
-    #[builder(default, setter(strip_option))]
     pub default_widget_type: Option<String>,
 
-    #[builder(default, setter(strip_option))]
     pub default_widget_count: Option<u64>,
 
-    #[builder(default, setter(strip_option))]
     pub use_old_network_legend: Option<bool>,
 
-    #[builder(default, setter(strip_option))]
     pub hide_table_gap: Option<bool>,
 
-    #[builder(default, setter(strip_option))]
     pub battery: Option<bool>,
 
-    #[builder(default, setter(strip_option))]
     pub disable_click: Option<bool>,
 
-    #[builder(default, setter(strip_option))]
     pub no_write: Option<bool>,
 
     // For built-in colour palettes.
-    #[builder(default, setter(strip_option))]
     pub color: Option<String>,
 
-    // This is a huge hack to enable hashmap functionality WITHOUT being able to serializing the field.
-    // Basically, keep a hashmap in the struct, and convert to a vector every time.
-    #[builder(default, setter(strip_option))]
-    #[serde(skip)]
-    pub search_case_enabled_widgets_map: Option<HashMap<u64, bool>>,
-
-    #[builder(default, setter(strip_option))]
     pub search_case_enabled_widgets: Option<Vec<WidgetIdEnabled>>,
 
-    #[builder(default, setter(strip_option))]
-    #[serde(skip)]
-    pub search_whole_word_enabled_widgets_map: Option<HashMap<u64, bool>>,
-
-    #[builder(default, setter(strip_option))]
     pub search_whole_word_enabled_widgets: Option<Vec<WidgetIdEnabled>>,
 
-    #[builder(default, setter(strip_option))]
-    #[serde(skip)]
-    pub search_regex_enabled_widgets_map: Option<HashMap<u64, bool>>,
-
-    #[builder(default, setter(strip_option))]
     pub search_regex_enabled_widgets: Option<Vec<WidgetIdEnabled>>,
 
-    #[builder(default, setter(strip_option))]
     pub mem_as_value: Option<bool>,
 
-    #[builder(default, setter(strip_option))]
     pub tree: Option<bool>,
 
-    #[builder(default, setter(strip_option))]
     show_table_scroll_position: Option<bool>,
 
-    #[builder(default, setter(strip_option))]
     pub process_command: Option<bool>,
 
-    #[builder(default, setter(strip_option))]
     pub disable_advanced_kill: Option<bool>,
 
-    #[builder(default, setter(strip_option))]
     pub network_use_bytes: Option<bool>,
 
-    #[builder(default, setter(strip_option))]
     pub network_use_log: Option<bool>,
 
-    #[builder(default, setter(strip_option))]
     pub network_use_binary_prefix: Option<bool>,
 }
 
@@ -464,13 +400,11 @@ pub fn build_app(
     if let Some(flags) = &mut config.flags {
         if flags.case_sensitive.is_none() && !matches.is_present("case_sensitive") {
             if let Some(search_case_enabled_widgets) = &flags.search_case_enabled_widgets {
-                let mapping = HashMap::new();
                 for widget in search_case_enabled_widgets {
                     if let Some(proc_widget) = proc_state_map.get_mut(&widget.id) {
                         proc_widget.process_search_state.is_ignoring_case = !widget.enabled;
                     }
                 }
-                flags.search_case_enabled_widgets_map = Some(mapping);
             }
         }
 
@@ -478,25 +412,21 @@ pub fn build_app(
             if let Some(search_whole_word_enabled_widgets) =
                 &flags.search_whole_word_enabled_widgets
             {
-                let mapping = HashMap::new();
                 for widget in search_whole_word_enabled_widgets {
                     if let Some(proc_widget) = proc_state_map.get_mut(&widget.id) {
                         proc_widget.process_search_state.is_searching_whole_word = widget.enabled;
                     }
                 }
-                flags.search_whole_word_enabled_widgets_map = Some(mapping);
             }
         }
 
         if flags.regex.is_none() && !matches.is_present("regex") {
             if let Some(search_regex_enabled_widgets) = &flags.search_regex_enabled_widgets {
-                let mapping = HashMap::new();
                 for widget in search_regex_enabled_widgets {
                     if let Some(proc_widget) = proc_state_map.get_mut(&widget.id) {
                         proc_widget.process_search_state.is_searching_with_regex = widget.enabled;
                     }
                 }
-                flags.search_regex_enabled_widgets_map = Some(mapping);
             }
         }
     }
