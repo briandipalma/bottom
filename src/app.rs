@@ -4,7 +4,7 @@ pub mod filter;
 pub mod layout_manager;
 mod process_killer;
 pub mod query;
-pub mod states;
+pub mod widget_states;
 
 use std::{
     cmp::{max, min},
@@ -22,7 +22,7 @@ use data_farmer::*;
 use data_harvester::{processes, temperature};
 pub use filter::*;
 use layout_manager::*;
-pub use states::*;
+pub use widget_states::*;
 
 use crate::{
     canvas, constants,
