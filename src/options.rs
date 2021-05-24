@@ -2,7 +2,6 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use std::{
     collections::{HashMap, HashSet},
-    path::PathBuf,
     str::FromStr,
     time::Instant,
 };
@@ -184,8 +183,7 @@ pub struct IgnoreList {
 pub fn build_app(
     matches: &clap::ArgMatches<'static>, config: &mut Config, widget_layout: &BottomLayout,
     default_widget_id: u64, default_widget_type_option: &Option<BottomWidgetType>,
-    config_path: Option<PathBuf>,
-) -> Result<App> {
+) -> Result<AppState> {
     use BottomWidgetType::*;
     let autohide_time = get_autohide_time(&matches, &config);
     let default_time_value = get_default_time_value(&matches, &config)
@@ -431,7 +429,7 @@ pub fn build_app(
         }
     }
 
-    Ok(App::builder()
+    Ok(AppState::builder()
         .app_config_fields(app_config_fields)
         .cpu_state(CpuState::init(cpu_state_map))
         .mem_state(MemState::init(mem_state_map))
@@ -450,8 +448,6 @@ pub fn build_app(
             temp_filter,
             net_filter,
         })
-        .config(config.clone())
-        .config_path(config_path)
         .build())
 }
 

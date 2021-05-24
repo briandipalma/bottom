@@ -9,7 +9,6 @@ pub mod widget_states;
 use std::{
     cmp::{max, min},
     collections::HashMap,
-    path::PathBuf,
     time::Instant,
 };
 
@@ -26,7 +25,6 @@ pub use widget_states::*;
 
 use crate::{
     canvas, constants,
-    options::Config,
     units::data_units::DataUnit,
     utils::error::{BottomError, Result},
     Pid,
@@ -67,13 +65,8 @@ pub struct AppConfigFields {
     pub network_use_binary_prefix: bool,
 }
 
-/// Represents the application state.
-pub struct AppState {
-    config: Config,
-}
-
 #[derive(TypedBuilder)]
-pub struct App {
+pub struct AppState {
     #[builder(default = false, setter(skip))]
     awaiting_second_char: bool,
 
@@ -116,9 +109,6 @@ pub struct App {
     #[builder(default = false, setter(skip))]
     pub basic_mode_use_percent: bool,
 
-    #[builder(default = false, setter(skip))]
-    pub is_config_open: bool,
-
     #[cfg(target_family = "unix")]
     #[builder(default, setter(skip))]
     pub user_table: processes::UserTable,
@@ -136,8 +126,6 @@ pub struct App {
     pub current_widget: BottomWidget,
     pub used_widgets: UsedWidgets,
     pub filters: DataFilters,
-    pub config: Config,
-    pub config_path: Option<PathBuf>,
 }
 
 #[cfg(target_os = "windows")]
@@ -147,7 +135,7 @@ const MAX_SIGNAL: usize = 64;
 #[cfg(target_os = "macos")]
 const MAX_SIGNAL: usize = 31;
 
-impl App {
+impl AppState {
     pub fn reset(&mut self) {
         // Reset multi
         self.reset_multi_tap_keys();
@@ -204,8 +192,6 @@ impl App {
             }
 
             self.is_force_redraw = true;
-        } else if self.is_config_open {
-            self.close_config_screen();
         } else {
             match self.current_widget.widget_type {
                 BottomWidgetType::Proc => {
@@ -283,7 +269,7 @@ impl App {
     }
 
     fn ignore_normal_keybinds(&self) -> bool {
-        self.is_config_open || self.is_in_dialog()
+        self.is_in_dialog()
     }
 
     pub fn on_tab(&mut self) {
@@ -773,8 +759,7 @@ impl App {
     }
 
     pub fn on_up_key(&mut self) {
-        if self.is_config_open {
-        } else if !self.is_in_dialog() {
+        if !self.is_in_dialog() {
             self.decrement_position_count();
         } else if self.help_dialog_state.is_showing_help {
             self.help_scroll_up();
@@ -795,8 +780,7 @@ impl App {
     }
 
     pub fn on_down_key(&mut self) {
-        if self.is_config_open {
-        } else if !self.is_in_dialog() {
+        if !self.is_in_dialog() {
             self.increment_position_count();
         } else if self.help_dialog_state.is_showing_help {
             self.help_scroll_down();
@@ -817,8 +801,7 @@ impl App {
     }
 
     pub fn on_left_key(&mut self) {
-        if self.is_config_open {
-        } else if !self.is_in_dialog() {
+        if !self.is_in_dialog() {
             match self.current_widget.widget_type {
                 BottomWidgetType::ProcSearch => {
                     let is_in_search_widget = self.is_in_search_widget();
@@ -889,8 +872,7 @@ impl App {
     }
 
     pub fn on_right_key(&mut self) {
-        if self.is_config_open {
-        } else if !self.is_in_dialog() {
+        if !self.is_in_dialog() {
             match self.current_widget.widget_type {
                 BottomWidgetType::ProcSearch => {
                     let is_in_search_widget = self.is_in_search_widget();
@@ -1026,7 +1008,6 @@ impl App {
                     }
                 }
             }
-        } else if self.is_config_open {
         }
     }
 
@@ -1073,7 +1054,6 @@ impl App {
                     }
                 }
             }
-        } else if self.is_config_open {
         }
     }
 
@@ -1327,7 +1307,6 @@ impl App {
                 'G' => self.skip_to_last(),
                 _ => {}
             }
-        } else if self.is_config_open {
         }
     }
 
@@ -1509,16 +1488,6 @@ impl App {
     }
 
     pub fn on_space(&mut self) {}
-
-    pub fn open_config_screen(&mut self) {
-        self.is_config_open = true;
-        self.is_force_redraw = true;
-    }
-
-    pub fn close_config_screen(&mut self) {
-        self.is_config_open = false;
-        self.is_force_redraw = true;
-    }
 
     pub fn kill_highlighted_process(&mut self) -> Result<()> {
         if let BottomWidgetType::Proc = self.current_widget.widget_type {
@@ -2078,7 +2047,6 @@ impl App {
                 _ => {}
             }
             self.reset_multi_tap_keys();
-        } else if self.is_config_open {
         } else if self.help_dialog_state.is_showing_help {
             self.help_dialog_state.scroll_state.current_scroll_index = 0;
         } else if self.delete_dialog_state.is_showing_dd {
@@ -2157,7 +2125,6 @@ impl App {
                 _ => {}
             }
             self.reset_multi_tap_keys();
-        } else if self.is_config_open {
         } else if self.help_dialog_state.is_showing_help {
             self.help_dialog_state.scroll_state.current_scroll_index = self
                 .help_dialog_state
