@@ -68,7 +68,9 @@ pub struct AppConfigFields {
 }
 
 /// Represents the application state.
-pub struct AppState {}
+pub struct AppState {
+    config: Config,
+}
 
 #[derive(TypedBuilder)]
 pub struct App {
