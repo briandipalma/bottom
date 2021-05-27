@@ -68,10 +68,10 @@ pub struct AppConfigFields {
 #[derive(TypedBuilder)]
 pub struct AppState {
     #[builder(default = false, setter(skip))]
-    awaiting_second_char: bool,
+    awaiting_second_char: bool, // TODO: Move out to input
 
     #[builder(default, setter(skip))]
-    second_char: Option<char>,
+    second_char: Option<char>, // TODO: Move out to input
 
     #[builder(default, setter(skip))]
     pub dd_err: Option<String>,
@@ -83,7 +83,7 @@ pub struct AppState {
     pub is_frozen: bool,
 
     #[builder(default = Instant::now(), setter(skip))]
-    last_key_press: Instant,
+    last_key_press: Instant, // TODO: Move out to input
 
     #[builder(default, setter(skip))]
     pub canvas_data: canvas::DisplayableData,

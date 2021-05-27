@@ -13,7 +13,7 @@ use tui::{
 
 use canvas_colours::*;
 use dialogs::*;
-use widgets::*;
+use elements::*;
 
 use crate::{
     app::{
@@ -32,7 +32,7 @@ use crate::{
 mod canvas_colours;
 mod dialogs;
 mod drawing_utils;
-mod widgets;
+mod elements;
 
 /// Point is of time, data
 type Point = (f64, f64);
